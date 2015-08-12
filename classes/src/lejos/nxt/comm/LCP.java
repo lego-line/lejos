@@ -301,7 +301,12 @@ public class LCP {
 				if(power < 0) tacholimit = -tacholimit;
 			
 				// Check if command is to STOP:
-				if(power == 0) m.stop(true);
+				if(power == 0) {
+					if((mode & 0x2) != 0)
+						m.stop(true);
+					else
+						m.flt(true);
+				}
 			
 				// Check if doing tacho rotation
 				if(tacholimit != 0)
