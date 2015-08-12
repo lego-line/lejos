@@ -7,23 +7,23 @@
 
 	<!-- Setting up the global properties for the build -->
 	<property file="build.properties" />
-	<property prefix="vars.classes"  file="${project.classes}/build.properties" />
-	<property prefix="vars.jtools"   file="${project.jtools}/build.properties" />
-	<property prefix="vars.pccomms"  file="${project.pccomms}/build.properties" />
-	<property prefix="vars.pctools"  file="${project.pctools}/build.properties" />
-	<property prefix="vars.scripts"  file="${project.scripts}/build.properties" />
-	<property prefix="vars.startup"  file="${project.startup}/build.properties" />
-	<property prefix="vars.charting" file="${project.charting}/build.properties" />
+	<property prefix="vars.classes"  file="${project.classes}/build.properties" prefixValues="true" />
+	<property prefix="vars.jtools"   file="${project.jtools}/build.properties" prefixValues="true" />
+	<property prefix="vars.pccomms"  file="${project.pccomms}/build.properties" prefixValues="true" />
+	<property prefix="vars.pctools"  file="${project.pctools}/build.properties" prefixValues="true" />
+	<property prefix="vars.scripts"  file="${project.scripts}/build.properties" prefixValues="true" />
+	<property prefix="vars.startup"  file="${project.startup}/build.properties" prefixValues="true" />
+	<property prefix="vars.charting" file="${project.charting}/build.properties" prefixValues="true" />
 
-	<property prefix="vars.samples"   file="${project.samples}/build.properties" />
-	<property prefix="vars.pcsamples" file="${project.pcsamples}/build.properties" />
-	<property prefix="vars.example"   file="${project.example}/build.properties" />
-	<property prefix="vars.pcexample" file="${project.pcexample}/build.properties" />
+	<property prefix="vars.samples"   file="${project.samples}/build.properties" prefixValues="true" />
+	<property prefix="vars.pcsamples" file="${project.pcsamples}/build.properties" prefixValues="true" />
+	<property prefix="vars.example"   file="${project.example}/build.properties" prefixValues="true" />
+	<property prefix="vars.pcexample" file="${project.pcexample}/build.properties" prefixValues="true" />
 
-	<property prefix="vars.nxtvm"      file="${project.nxtvm}/build.properties" />
-	<property prefix="vars.libnxt"     file="${project.libnxt}/build.properties" />
-	<property prefix="vars.jfantom"    file="${project.jfantom}/build.properties" />
-	<property prefix="vars.flashwrite" file="${project.flashwrite}/build.properties" />
+	<property prefix="vars.nxtvm"      file="${project.nxtvm}/build.properties" prefixValues="true" />
+	<property prefix="vars.libnxt"     file="${project.libnxt}/build.properties" prefixValues="true" />
+	<property prefix="vars.jfantom"    file="${project.jfantom}/build.properties" prefixValues="true" />
+	<property prefix="vars.flashwrite" file="${project.flashwrite}/build.properties" prefixValues="true" />
 
 	<!-- for consistency reasons -->
 	<property prefix="vars.release" file="build.properties" />

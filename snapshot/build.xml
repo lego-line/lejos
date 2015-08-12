@@ -7,14 +7,14 @@
 
 	<!-- Setting up the global properties for the build -->
 	<property file="build.properties" />
-	<property prefix="vars.classes"  file="${project.classes}/build.properties" />
-	<property prefix="vars.jtools"   file="${project.jtools}/build.properties" />
-	<property prefix="vars.pccomms"  file="${project.pccomms}/build.properties" />
-	<property prefix="vars.pctools"  file="${project.pctools}/build.properties" />
-	<property prefix="vars.scripts"  file="${project.scripts}/build.properties" />
-	<property prefix="vars.startup"  file="${project.startup}/build.properties" />
-	<property prefix="vars.charting" file="${project.charting}/build.properties" />
-	<property prefix="vars.samples"  file="${project.samples}/build.properties" />
+	<property prefix="vars.classes"  file="${project.classes}/build.properties" prefixValues="true" />
+	<property prefix="vars.jtools"   file="${project.jtools}/build.properties" prefixValues="true" />
+	<property prefix="vars.pccomms"  file="${project.pccomms}/build.properties" prefixValues="true" />
+	<property prefix="vars.pctools"  file="${project.pctools}/build.properties" prefixValues="true" />
+	<property prefix="vars.scripts"  file="${project.scripts}/build.properties" prefixValues="true" />
+	<property prefix="vars.startup"  file="${project.startup}/build.properties" prefixValues="true" />
+	<property prefix="vars.charting" file="${project.charting}/build.properties" prefixValues="true" />
+	<property prefix="vars.samples"  file="${project.samples}/build.properties" prefixValues="true" />
 	
 	<target name="debug-vars">
 		<echoproperties />
