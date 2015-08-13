@@ -34,7 +34,7 @@ public class RemoteMotor implements RegulatedMotor, DCMotor, NXTProtocol {
 	public RemoteMotor(NXTCommand nxtCommand, int id) {
 		this.id = id;
 		this.power = 80; // 80% power by default. Is this speed too?
-		this.mode = BRAKE + REGULATED; // Brake mode and regulation default
+		this.mode = BRAKE | REGULATED; // Brake mode and regulation default
 		this.regulationMode = REGULATION_MODE_MOTOR_SPEED;
 		this.turnRatio = 0; // 0 = even power/speed distro between motors
 		this.runState = MOTOR_RUN_STATE_IDLE;
@@ -65,7 +65,7 @@ public class RemoteMotor implements RegulatedMotor, DCMotor, NXTProtocol {
 	public void forward() {
 		this.runState = MOTOR_RUN_STATE_RUNNING;
 		try {
-			nxtCommand.setOutputState(id, power, this.mode + MOTORON, regulationMode, turnRatio, runState, 0);
+			nxtCommand.setOutputState(id, power, mode | MOTORON, regulationMode, turnRatio, runState, 0);
 		} catch (IOException ioe) {
 			System.out.println(ioe.getMessage());
 			//return -1;
@@ -75,7 +75,7 @@ public class RemoteMotor implements RegulatedMotor, DCMotor, NXTProtocol {
 	public void backward() {
 		this.runState = MOTOR_RUN_STATE_RUNNING;
 		try {
-			nxtCommand.setOutputState(id, (byte)-power, this.mode + MOTORON, regulationMode, turnRatio, runState, 0);
+			nxtCommand.setOutputState(id, (byte)-power, mode | MOTORON, regulationMode, turnRatio, runState, 0);
 		} catch (IOException ioe) {
 			System.out.println(ioe.getMessage());
 			//return -1;
@@ -165,9 +165,9 @@ public class RemoteMotor implements RegulatedMotor, DCMotor, NXTProtocol {
 		    return;
 		try {
 			if(count > 0)
-				nxtCommand.setOutputState(id, power, this.mode + MOTORON, regulationMode, turnRatio, runState, count); // Note using tachoLimit with Lego FW
+				nxtCommand.setOutputState(id, power, this.mode | MOTORON, regulationMode, turnRatio, runState, count); // Note using tachoLimit with Lego FW
 			else
-				nxtCommand.setOutputState(id, (byte)-power, this.mode + MOTORON, regulationMode, turnRatio, runState, Math.abs(count)); // Note using tachoLimit with Lego FW			
+				nxtCommand.setOutputState(id, (byte)-power, this.mode | MOTORON, regulationMode, turnRatio, runState, Math.abs(count)); // Note using tachoLimit with Lego FW			
 		} catch (IOException ioe) {
 			System.out.println(ioe.getMessage());
 		}
@@ -282,7 +282,7 @@ public class RemoteMotor implements RegulatedMotor, DCMotor, NXTProtocol {
 		//this.regulationMode = REGULATION_MODE_MOTOR_SPEED;
 		try {
 			// NOTE: Setting power to 0 seems to make it lock motor, not float it.
-			nxtCommand.setOutputState(id, (byte)0, BRAKE + MOTORON + REGULATED, regulationMode, turnRatio, runState, 0);
+			nxtCommand.setOutputState(id, (byte)0, mode | BRAKE, regulationMode, turnRatio, runState, 0);
 		} catch (IOException ioe) {
 			System.out.println(ioe.getMessage());
 			//return -1;
@@ -299,9 +299,8 @@ public class RemoteMotor implements RegulatedMotor, DCMotor, NXTProtocol {
 	public void flt(boolean returnNow) {
 		this.runState = MOTOR_RUN_STATE_IDLE;
 		//this.regulationMode = REGULATION_MODE_MOTOR_SPEED;
-		this.mode = MOTOR_RUN_STATE_IDLE;
 		try {
-			nxtCommand.setOutputState(id, (byte)0, 0x00, regulationMode, turnRatio, runState, 0);
+			nxtCommand.setOutputState(id, (byte)0, mode & ~BRAKE, regulationMode, turnRatio, runState, 0);
 		} catch (IOException ioe) {
 			System.out.println(ioe.getMessage());
 		}
