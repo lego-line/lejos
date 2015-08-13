@@ -86,8 +86,7 @@ public class RemoteMotor implements RegulatedMotor, DCMotor, NXTProtocol {
 		
 		if(speed > 900 || speed < 0)
 			return;
-		speed = (speed * 100) / 900;
-		this.power = (byte)speed;
+		setPower((speed * 100) / 900);
 	}
 	
 	/**
@@ -96,6 +95,11 @@ public class RemoteMotor implements RegulatedMotor, DCMotor, NXTProtocol {
 	 */
 	public void setPower(int power) {
 		this.power = (byte)power;
+		try {
+			nxtCommand.setOutputState(id, this.power, mode & ~MOTORON, regulationMode, turnRatio, runState, 0);
+		} catch (IOException ioe) {
+			System.out.println(ioe.getMessage());
+		}
 	}
 	
 	public int getSpeed() {

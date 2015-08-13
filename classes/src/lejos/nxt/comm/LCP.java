@@ -252,7 +252,7 @@ public class LCP implements NXTProtocol {
 					mReg.setSpeed(speed);
 					
 					// check if stopping
-					if(power == 0) {
+					if((mode & ~MOTORON) == mode && power == 0) {
 						if((mode & BRAKE) != 0)
 							mReg.stop(true);
 						else
@@ -272,7 +272,7 @@ public class LCP implements NXTProtocol {
 					mUnreg.setPower(Math.abs(power));
 
 					// check if stopping
-					if(power == 0) {
+					if((mode & ~MOTORON) == mode && power == 0) {
 						if((mode & BRAKE) != 0)
 							mUnreg.stop();
 						else
