@@ -36,6 +36,7 @@ import javax.swing.JTabbedPane;
 import javax.swing.JTable;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
+import javax.swing.UIManager;
 import javax.swing.border.Border;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
@@ -220,6 +221,10 @@ public class NXJControl implements ListSelectionListener, NXTProtocol, DataViewe
 	 * Run the program
 	 */
 	private int run() {
+		try {
+			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+		} catch (Exception e) { }
+		
 		// Close connection and exit when frame windows closed
 		WindowListener listener = new WindowAdapter() {
 			public void windowClosing(WindowEvent w) {

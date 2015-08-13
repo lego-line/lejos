@@ -20,6 +20,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
+import javax.swing.UIManager;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import org.apache.commons.cli.CommandLine;
@@ -83,6 +84,10 @@ public class NXJConsoleViewer extends JFrame implements ActionListener, ChangeLi
 
 	public void buildGui()
     {
+		try {
+			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+		} catch (Exception e) { }
+		
         JPanel connectPanel1 = new JPanel();  //holds text fields
         JPanel connectPanel2 = new JPanel();  //holds buttons
         ButtonGroup choiceGroup = new ButtonGroup();
