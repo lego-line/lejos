@@ -11,12 +11,15 @@ import lejos.nxt.I2CPort;
 import lejos.nxt.Motor;
 import lejos.nxt.MotorPort;
 import lejos.nxt.NXT;
+import lejos.nxt.NXTMotor;
 import lejos.nxt.NXTRegulatedMotor;
 import lejos.nxt.SensorPort;
 import lejos.nxt.Settings;
 import lejos.nxt.Sound;
 import lejos.nxt.SystemSettings;
 import lejos.nxt.remote.ErrorMessages;
+import lejos.nxt.remote.NXTProtocol;
+import lejos.robotics.BaseMotor;
 
 /**
  * 
@@ -164,8 +167,8 @@ public class LCP implements NXTProtocol {
 			byte turn_ratio = 0; // NXJ uses Pilot. Omitting.
 			reply[7] = turn_ratio; // Turn ratio
 			// RUN_STATE CALCULATION:
-			byte run_state = 0;
-			if (m.isMoving()) run_state = 0x20; // 0x20 = RUNNING
+			byte run_state = MOTOR_RUN_STATE_IDLE;
+			if (m.isMoving()) run_state = MOTOR_RUN_STATE_RUNNING;
 			reply[8] = run_state; // Run state
 			int limit = m.getLimitAngle();
 			// Tacho Limit
@@ -212,44 +215,74 @@ public class LCP implements NXTProtocol {
 			byte power = cmd[3];
 			int speed = (Math.abs(power) * 900) / 100;
 			byte mode = cmd[4];
-			// byte regMode = cmd[5];
+			byte regMode = cmd[5];
 			// byte turnRatio = cmd[6];
 			// byte runState = cmd[7];
 			int tacholimit = getInt(cmd, 8);
+			
+			boolean isRegulated = tacholimit != 0 || regMode != REGULATION_MODE_IDLE;
 					
 			for(int i=0;i<3;i++) 
 			{			
 				// Initialize motor:
-				NXTRegulatedMotor m = null;
+				NXTRegulatedMotor mReg = null;
+				NXTMotor mUnreg = null;
 			
-				if(motorid == 0 || (motorid < 0 && i == 0))
-					m = Motor.A;
-				else if (motorid == 1 || (motorid < 0 && i == 1))
-					m = Motor.B;
-				else if (motorid == 2 || (motorid < 0 && i == 2))
-				    m = Motor.C;
+				if(motorid == 0 || (motorid < 0 && i == 0)) {
+					mReg = Motor.A;
+					mUnreg = new NXTMotor(MotorPort.A);
+				}
+				else if (motorid == 1 || (motorid < 0 && i == 1)) {
+					mReg = Motor.B;
+					mUnreg = new NXTMotor(MotorPort.B);
+				}
+				else if (motorid == 2 || (motorid < 0 && i == 2)) {
+					mReg = Motor.C;
+					mUnreg = new NXTMotor(MotorPort.C);
+				}
+				else continue;
 				
-				m.setSpeed(speed);
-			
-				if(power < 0) tacholimit = -tacholimit;
-			
-				// Check if command is to STOP:
-				if(power == 0) {
-					if((mode & 0x2) != 0)
-						m.stop(true);
-					else
-						m.flt(true);
+				BaseMotor m;
+				if(isRegulated) {
+					mReg.setSpeed(speed);
+					
+					// check if stopping
+					if(power == 0) {
+						if((mode & BRAKE) != 0)
+							mReg.stop(true);
+						else
+							mReg.flt(true);
+					}
+					
+					// Check if doing tacho rotation
+					if(power < 0) tacholimit = -tacholimit;
+					if(tacholimit != 0) {
+						mReg.rotate(tacholimit, true); // Returns immediately
+					}
+					
+					m = mReg;
+				}
+				else {
+					mReg.suspendRegulation();
+					mUnreg.setPower(power);
+
+					// check if stopping
+					if(power == 0) {
+						if((mode & BRAKE) != 0)
+							mUnreg.stop();
+						else
+							mUnreg.flt();
+					}
+					
+					m = mUnreg;
 				}
 			
-				// Check if doing tacho rotation
-				if(tacholimit != 0)
-					m.rotate(tacholimit, true); // Returns immediately
-			
-				if((mode | 0x01) != 0 && power != 0 && tacholimit == 0) { // MOTORON
+				// Doing indefinite rotation
+				if(tacholimit == 0 && (mode & MOTORON) != 0 && power != 0) {
 					if(power>0) m.forward();
 					else m.backward();
 				}
-				
+			
 				if (motorid >= 0) break;
 			}
 			break;
