@@ -24,7 +24,7 @@ import lejos.nxt.remote.ErrorMessages;
  * with some extensions for lejos NXJ.
  *
  */
-public class LCP {
+public class LCP implements NXTProtocol {
 	private static byte[] i2cBuffer = new byte[16];
     private static File[] files = null;
     private static String[] fileNames = null;
@@ -37,74 +37,7 @@ public class LCP {
 	private static char[] charBuffer = new char[20];
 	public static InBox[] inBoxes = new InBox[20];
     
-	// Command types constants. Indicates type of packet being sent or received.
-	public static final byte DIRECT_COMMAND_REPLY = 0x00;
-	public static final byte SYSTEM_COMMAND_REPLY = 0x01;
-	public static final byte REPLY_COMMAND = 0x02;
-	public static final byte DIRECT_COMMAND_NOREPLY = (byte)0x80; // Avoids ~100ms latency
-	public static final byte SYSTEM_COMMAND_NOREPLY = (byte)0x81; // Avoids ~100ms latency
-
-	// Direct Commands
-	public static final byte START_PROGRAM = 0x00;
-	public static final byte STOP_PROGRAM = 0x01;
-	public static final byte PLAY_SOUND_FILE = 0x02;
-	public static final byte PLAY_TONE = 0x03;
-	public static final byte SET_OUTPUT_STATE = 0x04;
-	public static final byte SET_INPUT_MODE = 0x05;
-	public static final byte GET_OUTPUT_STATE = 0x06;
-	public static final byte GET_INPUT_VALUES = 0x07;
-	public static final byte RESET_SCALED_INPUT_VALUE = 0x08;
-	public static final byte MESSAGE_WRITE = 0x09;
-	public static final byte RESET_MOTOR_POSITION = 0x0A;	
-	public static final byte GET_BATTERY_LEVEL = 0x0B;
-	public static final byte STOP_SOUND_PLAYBACK = 0x0C;
-	public static final byte KEEP_ALIVE = 0x0D;
-	public static final byte LS_GET_STATUS = 0x0E;
-	public static final byte LS_WRITE = 0x0F;
-	public static final byte LS_READ = 0x10;
-	public static final byte GET_CURRENT_PROGRAM_NAME = 0x11;
-	public static final byte MESSAGE_READ = 0x13;
-	
-	// NXJ additions
-	public static final byte NXJ_DISCONNECT = 0x20; 
-	public static final byte NXJ_DEFRAG = 0x21;
-	public static final byte NXJ_SET_DEFAULT_PROGRAM = 0x22;
-	public static final byte NXJ_SET_SLEEP_TIME = 0x23;
-	public static final byte NXJ_SET_VOLUME = 0x24;
-	public static final byte NXJ_SET_KEY_CLICK_VOLUME = 0x25;
-	public static final byte NXJ_SET_AUTO_RUN = 0x26;
-	public static final byte NXJ_GET_VERSION = 0x27;
-	public static final byte NXJ_GET_DEFAULT_PROGRAM = 0x28;
-	public static final byte NXJ_GET_SLEEP_TIME = 0x29;
-	public static final byte NXJ_GET_VOLUME = 0x2A;
-	public static final byte NXJ_GET_KEY_CLICK_VOLUME = 0x2B;
-	public static final byte NXJ_GET_AUTO_RUN = 0x2C;
-		
-	// System Commands:
-	public static final byte OPEN_READ = (byte)0x80;
-	public static final byte OPEN_WRITE = (byte)0x81;
-	public static final byte READ = (byte)0x82;
-	public static final byte WRITE = (byte)0x83;
-	public static final byte CLOSE = (byte)0x84;
-	public static final byte DELETE = (byte)0x85;
-	public static final byte FIND_FIRST = (byte)0x86;
-	public static final byte FIND_NEXT = (byte)0x87;
-	public static final byte GET_FIRMWARE_VERSION = (byte)0x88;
-	public static final byte OPEN_WRITE_LINEAR = (byte)0x89;
-	public static final byte OPEN_READ_LINEAR = (byte)0x8A;
-	public static final byte OPEN_WRITE_DATA = (byte)0x8B;
-	public static final byte OPEN_APPEND_DATA = (byte)0x8C;
-	public static final byte BOOT = (byte)0x97;
-	public static final byte SET_BRICK_NAME = (byte)0x98;
-	public static final byte GET_DEVICE_INFO = (byte)0x9B;
-	public static final byte DELETE_USER_FLASH = (byte)0xA0;
-	public static final byte POLL_LENGTH = (byte)0xA1;
-	public static final byte POLL = (byte)0xA2;
-	
-	public static final byte NXJ_PACKET_MODE = (byte)0xff;
-	
 	// System settings
-	
 	private static final String defaultProgramProperty = "lejos.default_program";
 	private static final String sleepTimeProperty = "lejos.sleep_time";
 	private static final String defaultProgramAutoRunProperty = "lejos.default_autoRun";
@@ -220,11 +153,11 @@ public class LCP {
 			reply[4] = (byte)(m.getSpeed() * 100 / 900); // Power
 			// MODE CALCULATION:
 			byte mode = 0;
-			if (m.isMoving()) mode = 0x01; // 0x01 = MOTORON
+			if (m.isMoving()) mode = MOTORON;
 			reply[5] = mode; // Only contains isMoving (MOTORON) at moment
 			// REGULATION_MODE CALCULATION:
-			byte regulation_mode = 0; // 0 = idle
-			if (m.isMoving()) mode = 0x01; // 0x01 = MOTOR_SPEED
+			byte regulation_mode = REGULATION_MODE_IDLE;
+			if (m.isMoving()) mode = REGULATION_MODE_MOTOR_SPEED;
 			// !! This returns same as run state (below). Whats the diff?
 			reply[6] = regulation_mode; // Regulation mode
 			// TURN RATIO CALC (ignored):
