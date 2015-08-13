@@ -493,7 +493,7 @@ public abstract class NXTCommUSB implements NXTComm {
      * @return The optional reply, or null
      * @throws java.io.IOException Thrown on errors.
      */
-    public byte[] sendRequest(byte[] data, int replyLen) throws IOException {
+    public synchronized byte[] sendRequest(byte[] data, int replyLen) throws IOException {
     	this.write(data);
         if (replyLen == 0)
         	return new byte [0];
