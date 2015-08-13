@@ -264,7 +264,7 @@ public class LCP implements NXTProtocol {
 				}
 				else {
 					mReg.suspendRegulation();
-					mUnreg.setPower(power);
+					mUnreg.setPower(Math.abs(power));
 
 					// check if stopping
 					if(power == 0) {
