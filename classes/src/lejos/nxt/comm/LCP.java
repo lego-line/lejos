@@ -154,24 +154,29 @@ public class LCP implements NXTProtocol {
 			
 			reply[3] = port;
 			reply[4] = (byte)(m.getSpeed() * 100 / 900); // Power
+			
 			// MODE CALCULATION:
 			byte mode = 0;
 			if (m.isMoving()) mode = MOTORON;
 			reply[5] = mode; // Only contains isMoving (MOTORON) at moment
+			
 			// REGULATION_MODE CALCULATION:
 			byte regulation_mode = REGULATION_MODE_IDLE;
-			if (m.isMoving()) mode = REGULATION_MODE_MOTOR_SPEED;
+			if (m.isMoving()) regulation_mode = REGULATION_MODE_MOTOR_SPEED;
 			// !! This returns same as run state (below). Whats the diff?
 			reply[6] = regulation_mode; // Regulation mode
+			
 			// TURN RATIO CALC (ignored):
 			byte turn_ratio = 0; // NXJ uses Pilot. Omitting.
 			reply[7] = turn_ratio; // Turn ratio
+			
 			// RUN_STATE CALCULATION:
 			byte run_state = MOTOR_RUN_STATE_IDLE;
 			if (m.isMoving()) run_state = MOTOR_RUN_STATE_RUNNING;
 			reply[8] = run_state; // Run state
-			int limit = m.getLimitAngle();
+
 			// Tacho Limit
+			int limit = m.getLimitAngle();
 			setReplyInt(limit, reply,9);		
 			// TachoCount just returns same as RotationCount:
 			setReplyInt(tacho,reply,13);
