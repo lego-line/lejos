@@ -18,6 +18,8 @@ import javax.bluetooth.UUID;
 import javax.microedition.io.Connector;
 import javax.microedition.io.StreamConnection;
 
+import lejos.nxt.remote.NXTComm;
+
 /**
  * Implementation of NXTComm using the Bluecove libraries 
  * on Microsoft Windows. 

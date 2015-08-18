@@ -3,6 +3,8 @@ package lejos.pc.comm;
 import java.io.IOException;
 import java.io.InputStream;
 
+import lejos.nxt.remote.NXTComm;
+
 /**
  * Implements a sub-set of the Atmel SAM-BA download protocol. Only those
  * functions required for program download to the NXT flash are currently

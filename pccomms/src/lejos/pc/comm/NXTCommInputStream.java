@@ -3,6 +3,8 @@ package lejos.pc.comm;
 import java.io.IOException;
 import java.io.InputStream;
 
+import lejos.nxt.remote.NXTComm;
+
 /**
  * Implementation of InputStream over NXTComm using Bluetooth.
  */

@@ -5,6 +5,7 @@ import java.io.*;
 import lejos.internal.jni.JNIClass;
 import lejos.internal.jni.JNIException;
 import lejos.internal.jni.JNILoader;
+import lejos.nxt.remote.NXTComm;
 
 /**
  * Implementation of NXTComm using the the jbluez library 
