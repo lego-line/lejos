@@ -40,7 +40,7 @@ public class DThermalIR extends I2CSensor {
 	 * Construct a sensor instance that is connected to <code>port</code>.
 	 * @param port The NXT port to use
 	 */
-	public DThermalIR(SensorPort port) {
+	public DThermalIR(I2CPort port) {
 		super(port, I2C_ADDRESS, I2CPort.LEGO_MODE, TYPE_LOWSPEED);
 		Delay.msDelay(100);
 	}

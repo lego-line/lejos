@@ -5,7 +5,7 @@ import lejos.util.Delay;
  * Abstraction for a NXT input port.
  * 
  */
-public class SensorPort implements LegacySensorPort, I2CPort, ListenerCaller
+public class SensorPort implements LegacySensorPort, I2CPort, ListenerCaller, ColorSensorPort
 {
     /** Power types. 5V standard. */
     public static final int POWER_STD = 0;
