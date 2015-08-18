@@ -202,7 +202,7 @@ public class RemoteSensorPort implements NXTProtocol, ADSensorPort, I2CPort {
      */
     public void i2cWaitIOComplete()
     {
-        while(i2cStatus() == ERR_BUSY)
+        while(i2cStatus() == I2CPort.ERR_BUSY)
             Thread.yield();
     }
     
