@@ -68,6 +68,33 @@ public class NXTCommand implements NXTProtocol {
 		return verify;
 	}
 
+	private static String bytesToHex(byte[] bytes) {
+	    char[] res = new char[bytes.length * 2];
+	    for ( int j = 0; j < bytes.length; j++ ) {
+	        int v = bytes[j] & 0xFF;
+	        res[j * 2] = hexChars.charAt(v >>> 4);
+	        res[j * 2 + 1] = hexChars.charAt(v & 0x0F);
+	    }
+	    return new String(res);
+	}
+	
+	/**
+	 * Small helper method to send DIRECT COMMAND request to NXT and check the message length
+	 */
+	private byte[] sendRequestCheck(byte[] request, int replyLen) throws IOException {
+		byte[] reply = nxtComm.sendRequest(request, replyLen);
+
+		if(reply == null)
+			throw new IOException("Got no response");
+
+		if (reply.length < replyLen) {
+			if(reply.length > 2 && reply[2] != ErrorMessages.SUCCESS) {
+				throw new LCPException(reply[2]);
+			}
+			throw new IOException("Expected " + replyLen + " bytes, got "+reply.length + ": " + bytesToHex(reply));
+		}
+		return reply;
+	}
 	/**
 	 * Small helper method to send a SYSTEM COMMAND request to NXT and return
 	 * verification result.
@@ -124,7 +151,7 @@ public class NXTCommand implements NXTProtocol {
 	 */
 	public String getCurrentProgramName() throws IOException {
 		byte [] request = {DIRECT_COMMAND_REPLY, GET_CURRENT_PROGRAM_NAME};
-		byte [] reply =  nxtComm.sendRequest(request, 23);
+		byte [] reply =  sendRequestCheck(request, 23);
 		
 		return new StringBuffer(new String(reply)).delete(0, 2).toString();
 	}
@@ -141,15 +168,13 @@ public class NXTCommand implements NXTProtocol {
 		byte[] request = { SYSTEM_COMMAND_REPLY, OPEN_READ };
 		request = appendString(request, fileName); // No padding required
 													// apparently
-		byte[] reply = nxtComm.sendRequest(request, 8);
+		byte[] reply = sendRequestCheck(request, 8);
 		FileInfo fileInfo = new FileInfo(fileName);
-		if (reply[2] != ErrorMessages.SUCCESS)
-			throw new LCPException(reply[2]);
-		if (reply.length == 8) { // Check if all data included in reply
-			fileInfo.fileHandle = reply[3];
-			fileInfo.fileSize = (0xFF & reply[4]) | ((0xFF & reply[5]) << 8)
+		
+		fileInfo.fileHandle = reply[3];
+		fileInfo.fileSize = (0xFF & reply[4]) | ((0xFF & reply[5]) << 8)
 					| ((0xFF & reply[6]) << 16) | ((0xFF & reply[7]) << 24);
-		}
+
 		return fileInfo;
 	}
 
@@ -172,12 +197,7 @@ public class NXTCommand implements NXTProtocol {
 		byte[] fileLength = { (byte) size, (byte) (size >>> 8),
 				(byte) (size >>> 16), (byte) (size >>> 24) };
 		request = appendBytes(request, fileLength);
-		byte[] reply = nxtComm.sendRequest(request, 4);
-		if (reply == null || reply.length != 4) {
-			throw new IOException("Invalid return from OPEN WRITE");
-		} else if (reply[2] != ErrorMessages.SUCCESS) {
-			throw new LCPException(reply[2]);
-		}
+		byte[] reply = sendRequestCheck(request, 4);
 		return reply[3]; // The handle number
 	}
 
@@ -219,19 +239,18 @@ public class NXTCommand implements NXTProtocol {
 		byte[] request = { SYSTEM_COMMAND_REPLY, FIND_FIRST };
 		request = appendString(request, wildCard);
 
-		byte[] reply = nxtComm.sendRequest(request, 28);
+		byte[] reply = sendRequestCheck(request, 28);
 		FileInfo fileInfo = null;
-		if (reply[2] == 0 && reply.length == 28) {
-			StringBuffer name = new StringBuffer(new String(reply))
-					.delete(0, 4);
-			int lastPos = name.indexOf("\0");
-			if (lastPos < 0 || lastPos > 20) lastPos = 20;
-			name.delete(lastPos, name.length());
-			fileInfo = new FileInfo(name.toString());
-			fileInfo.fileHandle = reply[3];
-			fileInfo.fileSize = (0xFF & reply[24]) | ((0xFF & reply[25]) << 8)
-					| ((0xFF & reply[26]) << 16) | ((0xFF & reply[27]) << 24);
-		}
+		StringBuffer name = new StringBuffer(new String(reply))
+				.delete(0, 4);
+		int lastPos = name.indexOf("\0");
+		if (lastPos < 0 || lastPos > 20) lastPos = 20;
+		name.delete(lastPos, name.length());
+		fileInfo = new FileInfo(name.toString());
+		fileInfo.fileHandle = reply[3];
+		fileInfo.fileSize = (0xFF & reply[24]) | ((0xFF & reply[25]) << 8)
+				| ((0xFF & reply[26]) << 16) | ((0xFF & reply[27]) << 24);
+
 		return fileInfo;
 	}
 
@@ -247,19 +266,17 @@ public class NXTCommand implements NXTProtocol {
 
 		byte[] request = { SYSTEM_COMMAND_REPLY, FIND_NEXT, handle };
 
-		byte[] reply = nxtComm.sendRequest(request, 28);
+		byte[] reply = sendRequestCheck(request, 28);
 		FileInfo fileInfo = null;
-		if (reply[2] == 0 && reply.length == 28) {
-			StringBuffer name = new StringBuffer(new String(reply))
-					.delete(0, 4);
-			int lastPos = name.indexOf("\0");
-			if (lastPos < 0 || lastPos > 20) lastPos = 20;
-			name.delete(lastPos, name.length());
-			fileInfo = new FileInfo(name.toString());
-			fileInfo.fileHandle = reply[3];
-			fileInfo.fileSize = (0xFF & reply[24]) | ((0xFF & reply[25]) << 8)
-					| ((0xFF & reply[26]) << 16) | ((0xFF & reply[27]) << 24);
-		}
+		StringBuffer name = new StringBuffer(new String(reply))
+				.delete(0, 4);
+		int lastPos = name.indexOf("\0");
+		if (lastPos < 0 || lastPos > 20) lastPos = 20;
+		name.delete(lastPos, name.length());
+		fileInfo = new FileInfo(name.toString());
+		fileInfo.fileHandle = reply[3];
+		fileInfo.fileSize = (0xFF & reply[24]) | ((0xFF & reply[25]) << 8)
+				| ((0xFF & reply[26]) << 16) | ((0xFF & reply[27]) << 24);
 		return fileInfo;
 	}
 
@@ -303,7 +320,7 @@ public class NXTCommand implements NXTProtocol {
 	 */
 	public int getBatteryLevel() throws IOException {
 		byte[] request = { DIRECT_COMMAND_REPLY, GET_BATTERY_LEVEL };
-		byte[] reply = nxtComm.sendRequest(request, 5);
+		byte[] reply = sendRequestCheck(request, 5);
 		int batteryLevel = (0xFF & reply[3]) | ((0xFF & reply[4]) << 8);
 		return batteryLevel;
 	}
@@ -327,7 +344,7 @@ public class NXTCommand implements NXTProtocol {
 	 */
 	public void disconnect() throws IOException {
 		byte[] request = { SYSTEM_COMMAND_REPLY, NXJ_DISCONNECT };
-		nxtComm.sendRequest(request, 3); // Tell NXT to disconnect
+		sendRequestCheck(request, 3); // Tell NXT to disconnect
 		
 		// like boot(), this should probably mark this NXTCommand as closed
 		this.open = false;
@@ -346,7 +363,7 @@ public class NXTCommand implements NXTProtocol {
 		
         byte[] request = {SYSTEM_COMMAND_NOREPLY, BOOT};
         request = appendString(request, "Let's dance: SAMBA");
-        nxtComm.sendRequest(request, 0);
+        sendRequestCheck(request, 0);
         // Connection cannot be used after this command so we close it
         open = false;
     }
@@ -431,7 +448,7 @@ public class NXTCommand implements NXTProtocol {
 				chunkLen = remaining;
 			byte[] request = { SYSTEM_COMMAND_REPLY, READ, handle, (byte) chunkLen,
 					(byte) (chunkLen >>> 8) };
-			byte[] reply1 = nxtComm.sendRequest(request, chunkLen + 6);
+			byte[] reply1 = sendRequestCheck(request, chunkLen + 6);
 			int dataLen = (reply1[4] & 0xFF) + ((reply1[5] & 0xFF) << 8);
 			System.arraycopy(reply1, 6, data, chunkStart, dataLen);
 			chunkStart += chunkLen;
@@ -458,7 +475,7 @@ public class NXTCommand implements NXTProtocol {
 	 */
 	public String getFriendlyName() throws IOException {
 		byte[] request = { SYSTEM_COMMAND_REPLY, GET_DEVICE_INFO };
-		byte[] reply = nxtComm.sendRequest(request, 33);
+		byte[] reply = sendRequestCheck(request, 33);
 		char nameChars[] = new char[16];
 		int len = 0;
 
@@ -492,7 +509,7 @@ public class NXTCommand implements NXTProtocol {
 	 */
 	public String getLocalAddress() throws IOException {
 		byte[] request = { SYSTEM_COMMAND_REPLY, GET_DEVICE_INFO };
-		byte[] reply = nxtComm.sendRequest(request, 33);
+		byte[] reply = sendRequestCheck(request, 33);
 		char addrChars[] = new char[14];
 
 		for (int i = 0; i < 7; i++) {
@@ -512,7 +529,7 @@ public class NXTCommand implements NXTProtocol {
 	 */
 	public InputValues getInputValues(int port) throws IOException {
 		byte [] request = {DIRECT_COMMAND_REPLY, GET_INPUT_VALUES, (byte)port};
-		byte [] reply = nxtComm.sendRequest(request, 16);
+		byte [] reply = sendRequestCheck(request, 16);
 		InputValues inputValues = new InputValues();
 		inputValues.inputPort = reply[3];
 		// 0 is false, 1 is true.
@@ -537,7 +554,7 @@ public class NXTCommand implements NXTProtocol {
 	public OutputState getOutputState(int port) throws IOException {
 		// !! Needs to check port to verify they are correct ranges.
 		byte [] request = {DIRECT_COMMAND_REPLY, GET_OUTPUT_STATE, (byte)port};
-		byte [] reply = nxtComm.sendRequest(request,25);
+		byte [] reply = sendRequestCheck(request,25);
 
 		OutputState outputState = new OutputState(port);
 		outputState.status = reply[2];
@@ -562,7 +579,7 @@ public class NXTCommand implements NXTProtocol {
 	public int getTachoCount(int port) throws IOException {
 		synchronized(this) {
 			byte [] request = {DIRECT_COMMAND_REPLY, GET_OUTPUT_STATE, (byte)port};
-			byte [] reply = nxtComm.sendRequest(request, 25);
+			byte [] reply = sendRequestCheck(request, 25);
 	
 			int tachoCount = (0xFF & reply[13]) | ((0xFF & reply[14]) << 8)| ((0xFF & reply[15]) << 16)| ((0xFF & reply[16]) << 24);
 			return tachoCount;
@@ -590,7 +607,7 @@ public class NXTCommand implements NXTProtocol {
 	 */
 	public byte [] LSGetStatus(byte port) throws IOException{
 		byte [] request = {DIRECT_COMMAND_REPLY, LS_GET_STATUS, port};
-		byte [] reply = nxtComm.sendRequest(request,4);
+		byte [] reply = sendRequestCheck(request,4);
 		byte [] returnData = {reply[2], reply[3]}; 
 		return returnData;
 	}
@@ -606,7 +623,7 @@ public class NXTCommand implements NXTProtocol {
 	 */
 	public byte [] LSRead(byte port) throws IOException {
 		byte [] request = {DIRECT_COMMAND_REPLY, LS_READ, port};
-		byte [] reply = nxtComm.sendRequest(request, 20);
+		byte [] reply = sendRequestCheck(request, 20);
 		
 		int rxLength = reply[3] & 0xFF;
 		if(reply[2] == 0 && rxLength >= 0) {
@@ -765,7 +782,7 @@ public class NXTCommand implements NXTProtocol {
 	public DeviceInfo getDeviceInfo() throws IOException {
 		// !! Needs to check port to verify they are correct ranges.
 		byte [] request = {SYSTEM_COMMAND_REPLY, GET_DEVICE_INFO};
-		byte [] reply = nxtComm.sendRequest(request, 33);
+		byte [] reply = sendRequestCheck(request, 33);
 		DeviceInfo d = new DeviceInfo();
 		d.status = reply[2];
 		d.NXTname = new StringBuffer(new String(reply)).delete(18,33).delete(0, 3).toString();
@@ -873,7 +890,7 @@ public class NXTCommand implements NXTProtocol {
 	 */
 	public int getVolume() throws IOException {
 		byte[] request = {SYSTEM_COMMAND_REPLY, NXJ_GET_VOLUME};
-		byte [] reply = nxtComm.sendRequest(request, 4);
+		byte [] reply = sendRequestCheck(request, 4);
 		return reply[3];		
 	}
 	
@@ -885,7 +902,7 @@ public class NXTCommand implements NXTProtocol {
 	 */
 	public int getKeyClickVolume() throws IOException {
 		byte[] request = {SYSTEM_COMMAND_REPLY, NXJ_GET_KEY_CLICK_VOLUME};
-		byte [] reply = nxtComm.sendRequest(request, 4);
+		byte [] reply = sendRequestCheck(request, 4);
 		return reply[3];		
 	}
 	
@@ -897,7 +914,7 @@ public class NXTCommand implements NXTProtocol {
 	 */
 	public boolean getAutoRun() throws IOException {
 		byte[] request = {SYSTEM_COMMAND_REPLY, NXJ_GET_AUTO_RUN};
-		byte [] reply = nxtComm.sendRequest(request, 4);
+		byte [] reply = sendRequestCheck(request, 4);
 		return (reply[3] == 1);		
 	}
 	
@@ -909,7 +926,7 @@ public class NXTCommand implements NXTProtocol {
 	 */
 	public String getNXJFirmwareVersion() throws IOException {
 		byte[] request = {SYSTEM_COMMAND_REPLY, NXJ_GET_VERSION};
-		byte [] reply = nxtComm.sendRequest(request, 17);
+		byte [] reply = sendRequestCheck(request, 17);
 		int revision = (0xFF & reply[6]) | ((0xFF & reply[7]) << 8)| ((0xFF & reply[8]) << 16)| ((0xFF & reply[9]) << 24);
 		return reply[3] + "." + reply[4] + "." + reply[5] + "(" + revision + ")";	
 	}
@@ -922,7 +939,7 @@ public class NXTCommand implements NXTProtocol {
 	 */
 	public String getNXJMenuVersion() throws IOException {
 		byte[] request = {SYSTEM_COMMAND_REPLY, NXJ_GET_VERSION};
-		byte [] reply = nxtComm.sendRequest(request, 17);
+		byte [] reply = sendRequestCheck(request, 17);
 		int revision = (0xFF & reply[13]) | ((0xFF & reply[14]) << 8)| ((0xFF & reply[15]) << 16)| ((0xFF & reply[16]) << 24);
 		return reply[10] + "." + reply[11] + "." + reply[12] + "(" + revision + ")";	
 	}
@@ -935,7 +952,7 @@ public class NXTCommand implements NXTProtocol {
 	 */
 	public NXJFirmwareInfo getNXJFirmwareInfo() throws IOException {
 		byte[] request = {SYSTEM_COMMAND_REPLY, NXJ_GET_VERSION};
-		byte [] reply = nxtComm.sendRequest(request, 17);
+		byte [] reply = sendRequestCheck(request, 17);
 		NXJFirmwareInfo info = new NXJFirmwareInfo();
 		info.firmwareMajorVersion = reply[3];
 		info.firmwareMinorVersion = reply[4];
@@ -957,7 +974,7 @@ public class NXTCommand implements NXTProtocol {
 	 */
 	public int getSleepTime() throws IOException {
 		byte[] request = {SYSTEM_COMMAND_REPLY, NXJ_GET_SLEEP_TIME};
-		byte [] reply = nxtComm.sendRequest(request, 4);
+		byte [] reply = sendRequestCheck(request, 4);
 		return reply[3];
 	}
 	
@@ -969,7 +986,7 @@ public class NXTCommand implements NXTProtocol {
 	 */
 	public String getDefaultProgram() throws IOException {
 		byte[] request = {SYSTEM_COMMAND_REPLY, NXJ_GET_DEFAULT_PROGRAM};
-		byte [] reply = nxtComm.sendRequest(request, 23);
+		byte [] reply = sendRequestCheck(request, 23);
 		StringBuffer name =  new StringBuffer(new String(reply)).delete(0, 3);	
 		int lastPos = name.indexOf("\0");
 		if (lastPos < 0 || lastPos > 20) lastPos = 20;
@@ -985,7 +1002,7 @@ public class NXTCommand implements NXTProtocol {
 	 */
 	public byte setSleepTime(byte seconds) throws IOException {
 		byte[] request = {SYSTEM_COMMAND_REPLY, NXJ_SET_SLEEP_TIME, seconds};
-		byte [] reply = nxtComm.sendRequest(request, 3);
+		byte [] reply = sendRequestCheck(request, 3);
 		return reply[2];		
 	}
 	
