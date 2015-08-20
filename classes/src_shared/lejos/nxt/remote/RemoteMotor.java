@@ -67,7 +67,7 @@ public class RemoteMotor implements RegulatedMotor, DCMotor, NXTProtocol {
 		try {
 			nxtCommand.setOutputState(id, power, mode | MOTORON, regulationMode, turnRatio, runState, 0);
 		} catch (IOException ioe) {
-			System.out.println(ioe.getMessage());
+			System.err.println("RemoteMotor: "+ioe.getMessage());
 			//return -1;
 		}
 	}
@@ -77,7 +77,7 @@ public class RemoteMotor implements RegulatedMotor, DCMotor, NXTProtocol {
 		try {
 			nxtCommand.setOutputState(id, (byte)-power, mode | MOTORON, regulationMode, turnRatio, runState, 0);
 		} catch (IOException ioe) {
-			System.out.println(ioe.getMessage());
+			System.err.println("RemoteMotor: "+ioe.getMessage());
 			//return -1;
 		}
 	}
@@ -98,7 +98,7 @@ public class RemoteMotor implements RegulatedMotor, DCMotor, NXTProtocol {
 		try {
 			nxtCommand.setOutputState(id, this.power, mode & ~MOTORON, regulationMode, turnRatio, runState, 0);
 		} catch (IOException ioe) {
-			System.out.println(ioe.getMessage());
+			System.err.println("RemoteMotor: "+ioe.getMessage());
 		}
 	}
 	
@@ -119,7 +119,7 @@ public class RemoteMotor implements RegulatedMotor, DCMotor, NXTProtocol {
 			OutputState state = nxtCommand.getOutputState(id);
 			return state.rotationCount;
 		} catch (IOException ioe) {
-			System.out.println(ioe.getMessage());
+			System.err.println("RemoteMotor: "+ioe.getMessage());
 			return -1;
 		}
 	}
@@ -152,7 +152,7 @@ public class RemoteMotor implements RegulatedMotor, DCMotor, NXTProtocol {
 			OutputState state = nxtCommand.getOutputState(id);
 			return state.blockTachoCount;
 		} catch (IOException ioe) {
-			System.out.println(ioe.getMessage());
+			System.err.println("RemoteMotor: "+ioe.getMessage());
 			return 0;
 		}	
 	}
@@ -173,7 +173,7 @@ public class RemoteMotor implements RegulatedMotor, DCMotor, NXTProtocol {
 			else
 				nxtCommand.setOutputState(id, (byte)-power, this.mode | MOTORON, regulationMode, turnRatio, runState, Math.abs(count)); // Note using tachoLimit with Lego FW			
 		} catch (IOException ioe) {
-			System.out.println(ioe.getMessage());
+			System.err.println("RemoteMotor: "+ioe.getMessage());
 		}
 		if(!returnNow) {
 			// Check if mode is moving until done
@@ -187,7 +187,7 @@ public class RemoteMotor implements RegulatedMotor, DCMotor, NXTProtocol {
 			// return ((MOTORON & o.mode) == MOTORON);
 			return o.runState != MOTOR_RUN_STATE_IDLE; // Peter's bug fix
 		} catch (IOException ioe) {
-			System.out.println(ioe.getMessage());
+			System.err.println("RemoteMotor: "+ioe.getMessage());
 			return false;
 		}
 	}
@@ -252,7 +252,7 @@ public class RemoteMotor implements RegulatedMotor, DCMotor, NXTProtocol {
 		try {
 			nxtCommand.resetMotorPosition(this.id, false);
 		} catch (IOException ioe) {
-			System.out.println(ioe.getMessage());
+			System.err.println("RemoteMotor: "+ioe.getMessage());
 			//return -1;
 		}
 	}
@@ -276,7 +276,7 @@ public class RemoteMotor implements RegulatedMotor, DCMotor, NXTProtocol {
 		try {
 			nxtCommand.resetMotorPosition(this.id, true);
 		} catch (IOException ioe) {
-			System.out.println(ioe.getMessage());
+			System.err.println("RemoteMotor: "+ioe.getMessage());
 			return -1;
 		}
 		return 0;
@@ -288,7 +288,7 @@ public class RemoteMotor implements RegulatedMotor, DCMotor, NXTProtocol {
 			// NOTE: Setting power to 0 seems to make it lock motor, not float it.
 			nxtCommand.setOutputState(id, (byte)0, mode | BRAKE, regulationMode, turnRatio, runState, 0);
 		} catch (IOException ioe) {
-			System.out.println(ioe.getMessage());
+			System.err.println("RemoteMotor: "+ioe.getMessage());
 			//return -1;
 		}
         if (!returnNow)
@@ -306,7 +306,7 @@ public class RemoteMotor implements RegulatedMotor, DCMotor, NXTProtocol {
 		try {
 			nxtCommand.setOutputState(id, (byte)0, mode & ~BRAKE, regulationMode, turnRatio, runState, 0);
 		} catch (IOException ioe) {
-			System.out.println(ioe.getMessage());
+			System.err.println("RemoteMotor: "+ioe.getMessage());
 		}
         if (!returnNow)
             waitComplete();

@@ -80,6 +80,7 @@ public class RemoteSensorPort implements NXTProtocol, ADSensorPort, I2CPort {
 			InputValues vals = nxtCommand.getInputValues(id);
 			return (vals.rawADValue<600);			
 		} catch (IOException ioe) {
+			System.err.println("RemoteSensorPort: " + ioe.getMessage());
 			return false;
 		}
 	}
@@ -93,6 +94,7 @@ public class RemoteSensorPort implements NXTProtocol, ADSensorPort, I2CPort {
 			InputValues vals = nxtCommand.getInputValues(id);
 			return vals.rawADValue;
 		} catch (IOException ioe) {
+			System.err.println("RemoteSensorPort: " + ioe.getMessage());
 			return 0;
 		}
 	}
