@@ -1,5 +1,6 @@
 package lejos.pc.comm;
 
+import java.io.IOException;
 import java.util.Vector;
 
 import lejos.internal.jni.JNIClass;
@@ -58,13 +59,16 @@ public class NXTCommFantom extends NXTCommUSB implements JNIClass {
     }
     
 	@Override
-	int devWrite(long nxt, byte [] message, int offset, int len)
+	int devWrite(long nxt, byte [] message, int offset, int len) throws IOException
     {
-        return jfantom_send_data(nxt, message, offset, len);
+        int status = jfantom_send_data(nxt, message, offset, len);
+        if(status == -1073807194)
+            throw new IOException("Connection lost");
+        return status;
     }
     
 	@Override
-	int devRead(long nxt, byte[] data, int offset, int len)
+	int devRead(long nxt, byte[] data, int offset, int len) throws IOException
     {
         // The Fantom lib does not seem to detect when the USB cable is 
         // disconnected very well. It does not give an error it just times out
@@ -73,7 +77,9 @@ public class NXTCommFantom extends NXTCommUSB implements JNIClass {
         int errorCnt = 0;
         while(true)
         {
-        	int ret=jfantom_read_data(nxt, data, offset, len);
+        	int ret = jfantom_read_data(nxt, data, offset, len);
+            if(ret == -1073807194)
+                throw new IOException("Connection lost");
             long now = System.currentTimeMillis();
             //TODO time out + ret==0 may result in return value of 0.
             //Throw timeout exception instead. Confine java.net.Socket.setSoTimeout()
