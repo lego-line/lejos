@@ -11,12 +11,15 @@ import lejos.nxt.I2CPort;
 import lejos.nxt.Motor;
 import lejos.nxt.MotorPort;
 import lejos.nxt.NXT;
+import lejos.nxt.NXTMotor;
 import lejos.nxt.NXTRegulatedMotor;
 import lejos.nxt.SensorPort;
 import lejos.nxt.Settings;
 import lejos.nxt.Sound;
 import lejos.nxt.SystemSettings;
 import lejos.nxt.remote.ErrorMessages;
+import lejos.nxt.remote.NXTProtocol;
+import lejos.robotics.BaseMotor;
 
 /**
  * 
@@ -24,7 +27,7 @@ import lejos.nxt.remote.ErrorMessages;
  * with some extensions for lejos NXJ.
  *
  */
-public class LCP {
+public class LCP implements NXTProtocol {
 	private static byte[] i2cBuffer = new byte[16];
     private static File[] files = null;
     private static String[] fileNames = null;
@@ -37,74 +40,7 @@ public class LCP {
 	private static char[] charBuffer = new char[20];
 	public static InBox[] inBoxes = new InBox[20];
     
-	// Command types constants. Indicates type of packet being sent or received.
-	public static final byte DIRECT_COMMAND_REPLY = 0x00;
-	public static final byte SYSTEM_COMMAND_REPLY = 0x01;
-	public static final byte REPLY_COMMAND = 0x02;
-	public static final byte DIRECT_COMMAND_NOREPLY = (byte)0x80; // Avoids ~100ms latency
-	public static final byte SYSTEM_COMMAND_NOREPLY = (byte)0x81; // Avoids ~100ms latency
-
-	// Direct Commands
-	public static final byte START_PROGRAM = 0x00;
-	public static final byte STOP_PROGRAM = 0x01;
-	public static final byte PLAY_SOUND_FILE = 0x02;
-	public static final byte PLAY_TONE = 0x03;
-	public static final byte SET_OUTPUT_STATE = 0x04;
-	public static final byte SET_INPUT_MODE = 0x05;
-	public static final byte GET_OUTPUT_STATE = 0x06;
-	public static final byte GET_INPUT_VALUES = 0x07;
-	public static final byte RESET_SCALED_INPUT_VALUE = 0x08;
-	public static final byte MESSAGE_WRITE = 0x09;
-	public static final byte RESET_MOTOR_POSITION = 0x0A;	
-	public static final byte GET_BATTERY_LEVEL = 0x0B;
-	public static final byte STOP_SOUND_PLAYBACK = 0x0C;
-	public static final byte KEEP_ALIVE = 0x0D;
-	public static final byte LS_GET_STATUS = 0x0E;
-	public static final byte LS_WRITE = 0x0F;
-	public static final byte LS_READ = 0x10;
-	public static final byte GET_CURRENT_PROGRAM_NAME = 0x11;
-	public static final byte MESSAGE_READ = 0x13;
-	
-	// NXJ additions
-	public static final byte NXJ_DISCONNECT = 0x20; 
-	public static final byte NXJ_DEFRAG = 0x21;
-	public static final byte NXJ_SET_DEFAULT_PROGRAM = 0x22;
-	public static final byte NXJ_SET_SLEEP_TIME = 0x23;
-	public static final byte NXJ_SET_VOLUME = 0x24;
-	public static final byte NXJ_SET_KEY_CLICK_VOLUME = 0x25;
-	public static final byte NXJ_SET_AUTO_RUN = 0x26;
-	public static final byte NXJ_GET_VERSION = 0x27;
-	public static final byte NXJ_GET_DEFAULT_PROGRAM = 0x28;
-	public static final byte NXJ_GET_SLEEP_TIME = 0x29;
-	public static final byte NXJ_GET_VOLUME = 0x2A;
-	public static final byte NXJ_GET_KEY_CLICK_VOLUME = 0x2B;
-	public static final byte NXJ_GET_AUTO_RUN = 0x2C;
-		
-	// System Commands:
-	public static final byte OPEN_READ = (byte)0x80;
-	public static final byte OPEN_WRITE = (byte)0x81;
-	public static final byte READ = (byte)0x82;
-	public static final byte WRITE = (byte)0x83;
-	public static final byte CLOSE = (byte)0x84;
-	public static final byte DELETE = (byte)0x85;
-	public static final byte FIND_FIRST = (byte)0x86;
-	public static final byte FIND_NEXT = (byte)0x87;
-	public static final byte GET_FIRMWARE_VERSION = (byte)0x88;
-	public static final byte OPEN_WRITE_LINEAR = (byte)0x89;
-	public static final byte OPEN_READ_LINEAR = (byte)0x8A;
-	public static final byte OPEN_WRITE_DATA = (byte)0x8B;
-	public static final byte OPEN_APPEND_DATA = (byte)0x8C;
-	public static final byte BOOT = (byte)0x97;
-	public static final byte SET_BRICK_NAME = (byte)0x98;
-	public static final byte GET_DEVICE_INFO = (byte)0x9B;
-	public static final byte DELETE_USER_FLASH = (byte)0xA0;
-	public static final byte POLL_LENGTH = (byte)0xA1;
-	public static final byte POLL = (byte)0xA2;
-	
-	public static final byte NXJ_PACKET_MODE = (byte)0xff;
-	
 	// System settings
-	
 	private static final String defaultProgramProperty = "lejos.default_program";
 	private static final String sleepTimeProperty = "lejos.sleep_time";
 	private static final String defaultProgramAutoRunProperty = "lejos.default_autoRun";
@@ -218,24 +154,29 @@ public class LCP {
 			
 			reply[3] = port;
 			reply[4] = (byte)(m.getSpeed() * 100 / 900); // Power
+			
 			// MODE CALCULATION:
 			byte mode = 0;
-			if (m.isMoving()) mode = 0x01; // 0x01 = MOTORON
+			if (m.isMoving()) mode = MOTORON;
 			reply[5] = mode; // Only contains isMoving (MOTORON) at moment
+			
 			// REGULATION_MODE CALCULATION:
-			byte regulation_mode = 0; // 0 = idle
-			if (m.isMoving()) mode = 0x01; // 0x01 = MOTOR_SPEED
+			byte regulation_mode = REGULATION_MODE_IDLE;
+			if (m.isMoving()) regulation_mode = REGULATION_MODE_MOTOR_SPEED;
 			// !! This returns same as run state (below). Whats the diff?
 			reply[6] = regulation_mode; // Regulation mode
+			
 			// TURN RATIO CALC (ignored):
 			byte turn_ratio = 0; // NXJ uses Pilot. Omitting.
 			reply[7] = turn_ratio; // Turn ratio
+			
 			// RUN_STATE CALCULATION:
-			byte run_state = 0;
-			if (m.isMoving()) run_state = 0x20; // 0x20 = RUNNING
+			byte run_state = MOTOR_RUN_STATE_IDLE;
+			if (m.isMoving()) run_state = MOTOR_RUN_STATE_RUNNING;
 			reply[8] = run_state; // Run state
-			int limit = m.getLimitAngle();
+
 			// Tacho Limit
+			int limit = m.getLimitAngle();
 			setReplyInt(limit, reply,9);		
 			// TachoCount just returns same as RotationCount:
 			setReplyInt(tacho,reply,13);
@@ -279,39 +220,74 @@ public class LCP {
 			byte power = cmd[3];
 			int speed = (Math.abs(power) * 900) / 100;
 			byte mode = cmd[4];
-			// byte regMode = cmd[5];
+			byte regMode = cmd[5];
 			// byte turnRatio = cmd[6];
 			// byte runState = cmd[7];
 			int tacholimit = getInt(cmd, 8);
+			
+			boolean isRegulated = tacholimit != 0 || regMode != REGULATION_MODE_IDLE;
 					
 			for(int i=0;i<3;i++) 
 			{			
 				// Initialize motor:
-				NXTRegulatedMotor m = null;
+				NXTRegulatedMotor mReg = null;
+				NXTMotor mUnreg = null;
 			
-				if(motorid == 0 || (motorid < 0 && i == 0))
-					m = Motor.A;
-				else if (motorid == 1 || (motorid < 0 && i == 1))
-					m = Motor.B;
-				else if (motorid == 2 || (motorid < 0 && i == 2))
-				    m = Motor.C;
+				if(motorid == 0 || (motorid < 0 && i == 0)) {
+					mReg = Motor.A;
+					mUnreg = new NXTMotor(MotorPort.A);
+				}
+				else if (motorid == 1 || (motorid < 0 && i == 1)) {
+					mReg = Motor.B;
+					mUnreg = new NXTMotor(MotorPort.B);
+				}
+				else if (motorid == 2 || (motorid < 0 && i == 2)) {
+					mReg = Motor.C;
+					mUnreg = new NXTMotor(MotorPort.C);
+				}
+				else continue;
 				
-				m.setSpeed(speed);
+				BaseMotor m;
+				if(isRegulated) {
+					mReg.setSpeed(speed);
+					
+					// check if stopping
+					if((mode & ~MOTORON) == mode && power == 0) {
+						if((mode & BRAKE) != 0)
+							mReg.stop(true);
+						else
+							mReg.flt(true);
+					}
+					
+					// Check if doing tacho rotation
+					if(power < 0) tacholimit = -tacholimit;
+					if(tacholimit != 0) {
+						mReg.rotate(tacholimit, true); // Returns immediately
+					}
+					
+					m = mReg;
+				}
+				else {
+					mReg.suspendRegulation();
+					mUnreg.setPower(Math.abs(power));
+
+					// check if stopping
+					if((mode & ~MOTORON) == mode && power == 0) {
+						if((mode & BRAKE) != 0)
+							mUnreg.stop();
+						else
+							mUnreg.flt();
+					}
+					
+					m = mUnreg;
+				}
 			
-				if(power < 0) tacholimit = -tacholimit;
-			
-				// Check if command is to STOP:
-				if(power == 0) m.stop(true);
-			
-				// Check if doing tacho rotation
-				if(tacholimit != 0)
-					m.rotate(tacholimit, true); // Returns immediately
-			
-				if((mode | 0x01) != 0 && power != 0 && tacholimit == 0) { // MOTORON
+				// Doing indefinite rotation
+				if(tacholimit == 0 && (mode & MOTORON) != 0 && power != 0) {
 					if(power>0) m.forward();
 					else m.backward();
 				}
-				
+			
 				if (motorid >= 0) break;
 			}
 			break;

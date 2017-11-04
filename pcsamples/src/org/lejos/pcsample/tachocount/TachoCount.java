@@ -1,8 +1,8 @@
 package org.lejos.pcsample.tachocount;
 import lejos.nxt.Motor;
 import lejos.nxt.Sound;
+import lejos.nxt.remote.NXTComm;
 import lejos.nxt.remote.NXTCommand;
-import lejos.pc.comm.NXTComm;
 import lejos.pc.comm.NXTCommLogListener;
 import lejos.pc.comm.NXTCommandConnector;
 import lejos.pc.comm.NXTConnector;

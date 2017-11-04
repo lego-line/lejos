@@ -4,6 +4,7 @@ import java.util.ArrayList;
 
 import lejos.geom.Point;
 import lejos.nxt.Battery;
+import lejos.nxt.I2CPort;
 import lejos.nxt.SensorPort;
 import lejos.nxt.addon.CruizcoreGyro;
 import lejos.robotics.RegulatedMotor;
@@ -123,7 +124,7 @@ public class OmniPilot implements ArcRotateMoveController, RegulatedMotorListene
 	 */
 	public OmniPilot(float wheelDistanceFromCenter, float wheelDiameter, 
 			RegulatedMotor centralMotor, RegulatedMotor CW120degMotor, RegulatedMotor CCW120degMotor,  
-			boolean centralWheelFrontal, boolean motorReverse, SensorPort gyroPort) {
+			boolean centralWheelFrontal, boolean motorReverse, I2CPort gyroPort) {
 		this(wheelDistanceFromCenter, wheelDiameter,centralMotor, CW120degMotor, CCW120degMotor,  
 				centralWheelFrontal, motorReverse);
 		gyro = new CruizcoreGyro(gyroPort);

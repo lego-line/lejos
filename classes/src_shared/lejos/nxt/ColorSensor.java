@@ -23,7 +23,7 @@ public class ColorSensor implements LampLightDetector, ColorDetector, SensorCons
     {
         -1, Color.BLACK, Color.BLUE, Color.GREEN, Color.YELLOW, Color.RED, Color.WHITE
     };
-    protected SensorPort port;
+    protected ColorSensorPort port;
     protected int type;
     private int zero = 1023;
     private int hundred = 0;
@@ -59,7 +59,7 @@ public class ColorSensor implements LampLightDetector, ColorDetector, SensorCons
      * Create a new Color Sensor instance and bind it to a port.
      * @param port Port to use for the sensor.
      */
-    public ColorSensor(SensorPort port)
+    public ColorSensor(ColorSensorPort port)
     {
         this(port, Color.WHITE);
     }
@@ -70,7 +70,7 @@ public class ColorSensor implements LampLightDetector, ColorDetector, SensorCons
      * @param port Port to use for the sensor.
      * @param color The floodlight color.
      */
-    public ColorSensor(SensorPort port, int color)
+    public ColorSensor(ColorSensorPort port, int color)
     {
         this.port = port;
         port.enableColorSensor();

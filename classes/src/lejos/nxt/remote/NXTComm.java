@@ -46,7 +46,7 @@ public class NXTComm implements NXTCommRequest {
 
 	}
 	
-	public byte[] sendRequest(byte [] message, int replyLen) throws IOException {
+	public synchronized byte[] sendRequest(byte [] message, int replyLen) throws IOException {
 		sendData(message);
 		if (replyLen == 0) return new byte[0];
 		return readData();

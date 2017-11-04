@@ -11,6 +11,7 @@ import lejos.internal.config.ConfigManager;
 import lejos.internal.jni.JNIClass;
 import lejos.internal.jni.JNILoader;
 import lejos.internal.jni.OSInfo;
+import lejos.nxt.remote.NXTComm;
 
 /**
  * 

@@ -1,5 +1,7 @@
 package lejos.pc.comm;
 
+import lejos.nxt.remote.NXTComm;
+
 /**
  * Structure containing information about a specific NXT
  * and the potential connections to it. 

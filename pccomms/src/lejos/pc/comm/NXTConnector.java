@@ -7,6 +7,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
+import lejos.nxt.remote.NXTComm;
+
 /**
  * Connects to a NXT using Bluetooth or USB (or either) and supplies input and output
  * data streams.

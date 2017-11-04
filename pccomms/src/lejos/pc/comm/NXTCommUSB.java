@@ -6,6 +6,7 @@ import java.io.OutputStream;
 import java.util.Iterator;
 import java.util.Vector;
 
+import lejos.nxt.remote.NXTComm;
 import lejos.nxt.remote.NXTProtocol;
 
 /**
@@ -75,7 +76,7 @@ public abstract class NXTCommUSB implements NXTComm {
      * @param len Number of bytes to write.
      * @return Number of bytes written, 0 if timed out < 0 if an error.
      */
-	abstract int devWrite(long nxt, byte [] message, int offset, int len);
+	abstract int devWrite(long nxt, byte [] message, int offset, int len) throws IOException;
     
     /**
      * Read bytes from the device. The call must timeout after approx 20 seconds
@@ -86,7 +87,7 @@ public abstract class NXTCommUSB implements NXTComm {
      * @param len Number of bytes to read.
      * @return The number of bytes read, 0 if timeout < 0 if an error.
      */
-	abstract int devRead(long nxt, byte[] data, int offset, int len);
+	abstract int devRead(long nxt, byte[] data, int offset, int len) throws IOException;
     
     /**
      * Test to see if the contents of the NXTInfo structure are sufficient
@@ -169,6 +170,10 @@ public abstract class NXTCommUSB implements NXTComm {
 	        }
 	        return null;
         }
+        catch (IOException e)
+        {
+			return null;
+		}
         finally
         {
         	devClose(nxt);
@@ -493,7 +498,7 @@ public abstract class NXTCommUSB implements NXTComm {
      * @return The optional reply, or null
      * @throws java.io.IOException Thrown on errors.
      */
-    public byte[] sendRequest(byte[] data, int replyLen) throws IOException {
+    public synchronized byte[] sendRequest(byte[] data, int replyLen) throws IOException {
     	this.write(data);
         if (replyLen == 0)
         	return new byte [0];

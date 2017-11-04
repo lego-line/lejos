@@ -23,8 +23,8 @@ import javax.swing.JTable;
 import javax.swing.table.TableColumnModel;
 
 import lejos.nxt.remote.FileInfo;
+import lejos.nxt.remote.NXTComm;
 import lejos.nxt.remote.NXTCommand;
-import lejos.pc.comm.NXTComm;
 import lejos.pc.comm.NXTCommException;
 import lejos.pc.comm.NXTCommFactory;
 import lejos.pc.comm.NXTConnector;
